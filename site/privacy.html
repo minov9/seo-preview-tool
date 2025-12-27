@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>隐私政策 - SEO 预览工具</title>
+  <style>
+    :root {
+      --bg: #f7f6f2;
+      --card: #ffffff;
+      --text: #141414;
+      --muted: #6b6b6b;
+      --border: #e8e6df;
+      --shadow: 0 1px 2px rgba(0,0,0,0.04), 0 4px 12px rgba(0,0,0,0.02);
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: "Source Han Sans SC", "Noto Sans SC", "PingFang SC", sans-serif;
+      color: var(--text);
+      background: var(--bg);
+    }
+    a { color: inherit; text-decoration: none; }
+    .container { max-width: 900px; margin: 0 auto; padding: 24px; }
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 24px;
+    }
+    .logo { display: flex; align-items: center; gap: 10px; font-weight: 700; }
+    .logo-mark { width: 28px; height: 28px; border-radius: 8px; background: var(--text); color: #fff; display: grid; place-items: center; font-size: 12px; }
+    .card { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 18px; box-shadow: var(--shadow); }
+    h1 { font-size: 24px; margin: 0 0 12px; }
+    h2 { font-size: 16px; margin: 18px 0 8px; }
+    p, li { color: var(--muted); font-size: 14px; line-height: 1.7; }
+    ul { margin: 0; padding-left: 18px; }
+    .muted { color: var(--muted); font-size: 12px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div class="logo">
+        <div class="logo-mark">S</div>
+        <span>SEO 预览工具</span>
+      </div>
+      <nav>
+        <a href="index.html">主页</a>
+        <span class="muted"> / </span>
+        <a href="support.html">支持</a>
+      </nav>
+    </header>
+
+    <div class="card">
+      <h1>隐私政策</h1>
+      <p>SEO 预览工具尊重并保护用户隐私。本扩展不会收集、存储或传输任何个人数据。</p>
+
+      <h2>我们会访问什么数据</h2>
+      <ul>
+        <li>仅在当前页面读取 Title、Description、OG、Twitter、Canonical、H1 等公开元信息。</li>
+        <li>读取结果仅用于在本地生成预览与诊断。</li>
+      </ul>
+
+      <h2>我们如何使用数据</h2>
+      <ul>
+        <li>所有分析在浏览器本地完成。</li>
+        <li>不会将页面内容或用户数据上传到任何服务器。</li>
+      </ul>
+
+      <h2>权限说明</h2>
+      <ul>
+        <li><strong>activeTab</strong>：读取当前页面的元信息。</li>
+        <li><strong>scripting</strong>：注入内容脚本进行扫描。</li>
+        <li><strong>storage</strong>：保存最近一次扫描结果以便打开完整预览页。</li>
+      </ul>
+
+      <h2>联系我们</h2>
+      <p>如有隐私相关问题，请联系：<strong>qiuzhi814@gmail.com</strong></p>
+      <p class="muted">提示：如邮箱有变更，请同步更新该页面。</p>
+
+      <p class="muted">最后更新：2025-12-27</p>
+    </div>
+  </div>
+</body>
+</html>
