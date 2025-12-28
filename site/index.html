@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
+
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -12,23 +13,38 @@
       --muted: #6b6b6b;
       --border: #e8e6df;
       --accent: #2f5bff;
-      --shadow: 0 1px 2px rgba(0,0,0,0.04), 0 4px 12px rgba(0,0,0,0.02);
+      --shadow: 0 1px 2px rgba(0, 0, 0, 0.04), 0 4px 12px rgba(0, 0, 0, 0.02);
     }
-    * { box-sizing: border-box; }
+
+    * {
+      box-sizing: border-box;
+    }
+
     body {
       margin: 0;
       font-family: "Source Han Sans SC", "Noto Sans SC", "PingFang SC", sans-serif;
       color: var(--text);
       background: radial-gradient(circle at 20% 0%, #ffffff 0%, #f7f6f2 40%, #f2f0ea 100%);
     }
-    a { color: inherit; text-decoration: none; }
-    .container { max-width: 1100px; margin: 0 auto; padding: 0 24px; }
+
+    a {
+      color: inherit;
+      text-decoration: none;
+    }
+
+    .container {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 0 24px;
+    }
+
     header {
       height: 68px;
       display: flex;
       align-items: center;
       justify-content: space-between;
     }
+
     .logo {
       display: flex;
       align-items: center;
@@ -36,6 +52,7 @@
       font-weight: 700;
       letter-spacing: -0.02em;
     }
+
     .logo-mark {
       width: 28px;
       height: 28px;
@@ -46,7 +63,14 @@
       place-items: center;
       font-size: 12px;
     }
-    nav { display: flex; gap: 18px; font-size: 13px; color: var(--muted); }
+
+    nav {
+      display: flex;
+      gap: 18px;
+      font-size: 13px;
+      color: var(--muted);
+    }
+
     .hero {
       padding: 80px 0 40px;
       display: grid;
@@ -54,14 +78,27 @@
       gap: 40px;
       align-items: center;
     }
+
     .hero h1 {
       font-size: 40px;
       line-height: 1.1;
       letter-spacing: -0.03em;
       margin: 0 0 16px;
     }
-    .hero p { color: var(--muted); font-size: 16px; line-height: 1.7; margin: 0 0 24px; }
-    .cta { display: flex; gap: 12px; flex-wrap: wrap; }
+
+    .hero p {
+      color: var(--muted);
+      font-size: 16px;
+      line-height: 1.7;
+      margin: 0 0 24px;
+    }
+
+    .cta {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
     .button {
       padding: 12px 18px;
       border-radius: 10px;
@@ -70,8 +107,18 @@
       font-weight: 600;
       cursor: pointer;
     }
-    .button.primary { background: var(--text); color: #fff; }
-    .button.secondary { background: var(--card); border-color: var(--border); color: var(--text); }
+
+    .button.primary {
+      background: var(--text);
+      color: #fff;
+    }
+
+    .button.secondary {
+      background: var(--card);
+      border-color: var(--border);
+      color: var(--text);
+    }
+
     .hero-card {
       background: var(--card);
       border: 1px solid var(--border);
@@ -79,15 +126,38 @@
       padding: 22px;
       box-shadow: var(--shadow);
     }
-    .hero-card h3 { margin: 0 0 12px; font-size: 14px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; }
-    .hero-card ul { margin: 0; padding-left: 18px; color: var(--muted); line-height: 1.8; font-size: 14px; }
-    .section { padding: 40px 0; }
-    .section h2 { font-size: 22px; margin: 0 0 18px; }
+
+    .hero-card h3 {
+      margin: 0 0 12px;
+      font-size: 14px;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    .hero-card ul {
+      margin: 0;
+      padding-left: 18px;
+      color: var(--muted);
+      line-height: 1.8;
+      font-size: 14px;
+    }
+
+    .section {
+      padding: 40px 0;
+    }
+
+    .section h2 {
+      font-size: 22px;
+      margin: 0 0 18px;
+    }
+
     .grid {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
       gap: 16px;
     }
+
     .card {
       background: var(--card);
       border: 1px solid var(--border);
@@ -95,9 +165,24 @@
       padding: 16px;
       box-shadow: var(--shadow);
     }
-    .card h3 { margin: 0 0 8px; font-size: 15px; }
-    .card p { margin: 0; color: var(--muted); font-size: 13px; line-height: 1.6; }
-    .steps { display: grid; gap: 14px; }
+
+    .card h3 {
+      margin: 0 0 8px;
+      font-size: 15px;
+    }
+
+    .card p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.6;
+    }
+
+    .steps {
+      display: grid;
+      gap: 14px;
+    }
+
     .step {
       display: flex;
       align-items: flex-start;
@@ -108,6 +193,7 @@
       padding: 14px;
       box-shadow: var(--shadow);
     }
+
     .step-number {
       width: 26px;
       height: 26px;
@@ -118,18 +204,33 @@
       font-weight: 700;
       font-size: 12px;
     }
+
     .footer {
       padding: 40px 0 60px;
       color: var(--muted);
       font-size: 12px;
     }
-    .footer a { color: var(--text); }
+
+    .footer a {
+      color: var(--text);
+    }
+
     @media (max-width: 900px) {
-      .hero { grid-template-columns: 1fr; padding: 60px 0 24px; }
-      header { flex-direction: column; gap: 12px; height: auto; padding-top: 20px; }
+      .hero {
+        grid-template-columns: 1fr;
+        padding: 60px 0 24px;
+      }
+
+      header {
+        flex-direction: column;
+        gap: 12px;
+        height: auto;
+        padding-top: 20px;
+      }
     }
   </style>
 </head>
+
 <body>
   <div class="container">
     <header>
@@ -159,6 +260,41 @@
           <li>生成可截图的 SEO 预览交付物</li>
           <li>排查 OG / Twitter 分享卡片问题</li>
         </ul>
+      </div>
+    </section>
+
+    <section class="section" id="pricing">
+      <h2>升级 Pro</h2>
+      <div class="grid" style="grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));">
+        <div class="card" style="border-color: var(--accent); position: relative; overflow: hidden;">
+          <div style="position: absolute; top: 0; left: 0; width: 100%; height: 6px; background: var(--accent);"></div>
+          <h3 style="font-size: 18px; color: var(--accent);">Pro 月付</h3>
+          <div style="font-size: 32px; font-weight: 700; margin: 16px 0;">¥9.9 <span
+              style="font-size: 14px; color: var(--muted); font-weight: 400;">/ 月</span></div>
+          <ul style="padding-left: 20px; color: var(--muted); font-size: 14px; line-height: 1.8; margin-bottom: 24px;">
+            <li>解锁无限次导出 PNG</li>
+            <li>解锁高级诊断规则</li>
+            <li>支持开发者持续迭代</li>
+          </ul>
+          <a href="/api/alipay/pay?plan=monthly" class="button primary"
+            style="display: block; text-align: center;">立即购买</a>
+        </div>
+
+        <div class="card" style="border: 2px solid var(--text);">
+          <div
+            style="position: absolute; top: 12px; right: 12px; background: #fde047; font-size: 12px; font-weight: 700; padding: 4px 8px; border-radius: 4px;">
+            推荐</div>
+          <h3 style="font-size: 18px;">Pro 年付</h3>
+          <div style="font-size: 32px; font-weight: 700; margin: 16px 0;">¥99.0 <span
+              style="font-size: 14px; color: var(--muted); font-weight: 400;">/ 年</span></div>
+          <ul style="padding-left: 20px; color: var(--muted); font-size: 14px; line-height: 1.8; margin-bottom: 24px;">
+            <li>包含所有 Pro 功能</li>
+            <li><strong>立省 17%</strong> (相当于送2个月)</li>
+            <li>优先技术支持</li>
+          </ul>
+          <a href="/api/alipay/pay?plan=yearly" class="button primary"
+            style="display: block; text-align: center;">立即购买</a>
+        </div>
       </div>
     </section>
 
@@ -223,4 +359,5 @@
     </footer>
   </div>
 </body>
+
 </html>

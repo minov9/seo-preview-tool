@@ -37,7 +37,30 @@ const fallbackMessages = {
     severityCritical: '严重',
     severityWarning: '警告',
     severityInfo: '提示',
-    severityOk: 'OK'
+    severityOk: 'OK',
+    proBadge: 'Pro',
+    proStatusActive: '已激活',
+    proStatusInactive: '未激活',
+    proStatusExpired: '已过期',
+    proExpiresAt: '到期 $1',
+    proUpgrade: '升级 Pro',
+    proActivate: '激活',
+    proActivationTitle: 'Pro 授权',
+    proLicenseLabel: '授权码',
+    proLicensePlaceholder: '输入 License Key',
+    proLicenseSubmit: '验证并激活',
+    proLicenseMissing: '请输入授权码',
+    proLicenseInvalid: '授权码无效',
+    proLicenseExpired: '授权已过期',
+    proLicenseNotConfigured: '授权服务未配置',
+    proLicenseNetworkError: '授权验证失败，请稍后再试',
+    proActivationSuccess: '授权已更新',
+    proLockedExport: '导出功能需升级 Pro',
+    proLockedCopy: '复制摘要需升级 Pro',
+    proLockedRules: '高级诊断需升级 Pro',
+    proHiddenIssues: '已隐藏 $1 条高级诊断',
+    proUnlockHint: '升级 Pro 解锁导出与高级诊断',
+    proUpgradeUnavailable: '购买链接未配置'
 };
 
 type I18nKey = keyof typeof fallbackMessages;

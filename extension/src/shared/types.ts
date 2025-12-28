@@ -6,6 +6,7 @@ export interface Issue {
     title: string;
     detail: string;
     suggestion: string; // Action-oriented advice
+    tier?: 'free' | 'pro';
 }
 
 export interface MetricData {

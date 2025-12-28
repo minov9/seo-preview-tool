@@ -68,7 +68,8 @@ export function evaluateRules(data: Omit<ScanResult, 'issues'>): Issue[] {
             level: 'critical',
             title: 'Title 缺失',
             detail: '未检测到 Title',
-            suggestion: '添加 30-60 字内标题'
+            suggestion: '添加 30-60 字内标题',
+            tier: 'free'
         });
     }
 
@@ -79,7 +80,8 @@ export function evaluateRules(data: Omit<ScanResult, 'issues'>): Issue[] {
             level: 'warning',
             title: 'Description 缺失',
             detail: '未检测到 Description',
-            suggestion: '补充 90-160 字简短描述'
+            suggestion: '补充 90-160 字简短描述',
+            tier: 'free'
         });
     }
 
@@ -90,7 +92,8 @@ export function evaluateRules(data: Omit<ScanResult, 'issues'>): Issue[] {
             level: 'warning',
             title: 'Title 过长',
             detail: `当前 ${title.pxWidth}px，超过建议上限 580px`,
-            suggestion: '缩短标题前半部分'
+            suggestion: '缩短标题前半部分',
+            tier: 'free'
         });
     }
 
@@ -101,7 +104,8 @@ export function evaluateRules(data: Omit<ScanResult, 'issues'>): Issue[] {
             level: 'warning',
             title: 'Description 过长',
             detail: `当前 ${description.pxWidth}px，超过建议上限 920px`,
-            suggestion: '精简描述，保留关键信息'
+            suggestion: '精简描述，保留关键信息',
+            tier: 'free'
         });
     }
 
@@ -112,7 +116,8 @@ export function evaluateRules(data: Omit<ScanResult, 'issues'>): Issue[] {
             level: 'warning',
             title: 'OG 图片缺失',
             detail: '未检测到 og:image',
-            suggestion: '设置 1200x630 分享图片'
+            suggestion: '设置 1200x630 分享图片',
+            tier: 'free'
         });
     } else if (og.imageWidth && og.imageHeight) {
         const ratio = og.imageWidth / og.imageHeight;
@@ -124,7 +129,8 @@ export function evaluateRules(data: Omit<ScanResult, 'issues'>): Issue[] {
                 level: 'warning',
                 title: 'OG 图片尺寸不合规',
                 detail: `当前 ${og.imageWidth}x${og.imageHeight}，建议 ${THRESHOLDS.ogWidth}x${THRESHOLDS.ogHeight}`,
-                suggestion: '更换为 1200x630 图片'
+                suggestion: '更换为 1200x630 图片',
+                tier: 'free'
             });
         }
     }
@@ -136,7 +142,8 @@ export function evaluateRules(data: Omit<ScanResult, 'issues'>): Issue[] {
             level: 'info',
             title: 'Title 过短',
             detail: `当前 ${title.pxWidth}px，低于建议下限 200px`,
-            suggestion: '补充核心关键词'
+            suggestion: '补充核心关键词',
+            tier: 'pro'
         });
     }
 
@@ -147,7 +154,8 @@ export function evaluateRules(data: Omit<ScanResult, 'issues'>): Issue[] {
             level: 'info',
             title: 'Description 过短',
             detail: `当前 ${description.pxWidth}px，低于建议下限 400px`,
-            suggestion: '补充关键信息与卖点'
+            suggestion: '补充关键信息与卖点',
+            tier: 'pro'
         });
     }
 
@@ -158,7 +166,8 @@ export function evaluateRules(data: Omit<ScanResult, 'issues'>): Issue[] {
             level: 'warning',
             title: 'Canonical 缺失',
             detail: 'Canonical 标签缺失',
-            suggestion: '设置指向当前 URL 的 canonical'
+            suggestion: '设置指向当前 URL 的 canonical',
+            tier: 'free'
         });
     } else {
         const canonicalUrl = normalizeUrl(canonical, url);
@@ -169,7 +178,8 @@ export function evaluateRules(data: Omit<ScanResult, 'issues'>): Issue[] {
                 level: 'warning',
                 title: 'Canonical 不一致',
                 detail: 'Canonical 指向非当前 URL',
-                suggestion: '确保 canonical 指向当前页面'
+                suggestion: '确保 canonical 指向当前页面',
+                tier: 'free'
             });
         }
     }
@@ -182,7 +192,8 @@ export function evaluateRules(data: Omit<ScanResult, 'issues'>): Issue[] {
             level: 'critical',
             title: '检测到 Noindex',
             detail: '页面包含 noindex 指令',
-            suggestion: '确认该页面是否需要被搜索引擎收录'
+            suggestion: '确认该页面是否需要被搜索引擎收录',
+            tier: 'free'
         });
     }
 
@@ -193,7 +204,8 @@ export function evaluateRules(data: Omit<ScanResult, 'issues'>): Issue[] {
             level: 'info',
             title: 'Title 与 H1 高度重复',
             detail: 'Title 与 H1 文本高度一致',
-            suggestion: '区分页面标题与正文标题'
+            suggestion: '区分页面标题与正文标题',
+            tier: 'pro'
         });
     }
 
@@ -209,7 +221,8 @@ export function evaluateRules(data: Omit<ScanResult, 'issues'>): Issue[] {
             level: 'info',
             title: '分享文案不一致',
             detail: detailParts.join('；'),
-            suggestion: '对齐页面文案与分享文案'
+            suggestion: '对齐页面文案与分享文案',
+            tier: 'pro'
         });
     }
 
@@ -220,7 +233,8 @@ export function evaluateRules(data: Omit<ScanResult, 'issues'>): Issue[] {
             level: 'warning',
             title: 'H1 缺失',
             detail: '当前 H1 数量为 0',
-            suggestion: '添加 1 个主标题'
+            suggestion: '添加 1 个主标题',
+            tier: 'free'
         });
     } else if (h1.count > 1) {
         issues.push({
@@ -228,7 +242,8 @@ export function evaluateRules(data: Omit<ScanResult, 'issues'>): Issue[] {
             level: 'warning',
             title: '多 H1 标签',
             detail: `当前 H1 数量为 ${h1.count}`,
-            suggestion: '保留 1 个主标题'
+            suggestion: '保留 1 个主标题',
+            tier: 'free'
         });
     }
 
@@ -241,7 +256,8 @@ export function evaluateRules(data: Omit<ScanResult, 'issues'>): Issue[] {
             level: 'warning',
             title: '分享卡片缺失',
             detail: '未检测到 twitter:card',
-            suggestion: '设置 twitter:card 与分享图片'
+            suggestion: '设置 twitter:card 与分享图片',
+            tier: 'pro'
         });
     } else if (og.image && !twitter.image) {
         issues.push({
@@ -249,7 +265,8 @@ export function evaluateRules(data: Omit<ScanResult, 'issues'>): Issue[] {
             level: 'warning',
             title: '分享卡片不完整',
             detail: '检测到 og:image，但缺少 twitter:image',
-            suggestion: '补充 twitter:image'
+            suggestion: '补充 twitter:image',
+            tier: 'pro'
         });
     } else if (normalizedOgImage && normalizedTwitterImage && normalizedOgImage !== normalizedTwitterImage) {
         issues.push({
@@ -257,7 +274,8 @@ export function evaluateRules(data: Omit<ScanResult, 'issues'>): Issue[] {
             level: 'warning',
             title: '分享卡片图片不一致',
             detail: 'og:image 与 twitter:image 不一致',
-            suggestion: '对齐分享图片，减少平台差异'
+            suggestion: '对齐分享图片，减少平台差异',
+            tier: 'pro'
         });
     }
 

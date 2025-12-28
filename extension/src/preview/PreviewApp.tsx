@@ -6,6 +6,8 @@ import { PreviewCard } from '../shared/components/PreviewCard';
 import { SharePreviewCard } from '../shared/components/SharePreviewCard';
 import { toPng } from 'html-to-image';
 import { t } from '../shared/i18n';
+import { useProStatus } from '../shared/useProStatus';
+import { formatExpiry, maskLicenseKey, resolveUpgradeUrl } from '../shared/pro';
 
 
 const PreviewApp: React.FC = () => {
@@ -14,8 +16,17 @@ const PreviewApp: React.FC = () => {
     const [error, setError] = useState<string | null>(null);
     const [device, setDevice] = useState<'desktop' | 'mobile'>('desktop');
     const exportRef = useRef<HTMLDivElement>(null);
+    const { status: proStatus, error: proError, isActive: isProActive, activate } = useProStatus();
+    const [licenseInput, setLicenseInput] = useState('');
+    const [activationNote, setActivationNote] = useState<string | null>(null);
+    const [activationBusy, setActivationBusy] = useState(false);
+    const upgradeUrl = resolveUpgradeUrl();
 
     const handleExport = async () => {
+        if (!isProActive) {
+            setActivationNote(t('proLockedExport'));
+            return;
+        }
         if (exportRef.current === null) {
             return;
         }
@@ -37,6 +48,10 @@ const PreviewApp: React.FC = () => {
     };
 
     const handleCopySummary = async () => {
+        if (!isProActive) {
+            setActivationNote(t('proLockedCopy'));
+            return;
+        }
         if (!data) return;
         const topIssues = data.issues.slice(0, 3);
         const lines = [
@@ -53,6 +68,47 @@ const PreviewApp: React.FC = () => {
         } catch (err) {
             console.error('Failed to copy summary', err);
             alert('复制失败，请稍后重试');
+        }
+    };
+
+    const resolveLicenseError = () => {
+        if (!proError) return null;
+        switch (proError.code) {
+            case 'missing':
+                return t('proLicenseMissing');
+            case 'not_configured':
+                return t('proLicenseNotConfigured');
+            case 'invalid':
+                return t('proLicenseInvalid');
+            case 'expired':
+                return t('proLicenseExpired');
+            case 'network':
+                return t('proLicenseNetworkError');
+            default:
+                return proError.message || t('proLicenseNetworkError');
+        }
+    };
+
+    const handleUpgrade = () => {
+        if (!upgradeUrl) {
+            setActivationNote(t('proUpgradeUnavailable'));
+            return;
+        }
+        chrome.tabs.create({ url: upgradeUrl });
+    };
+
+    const handleActivate = async () => {
+        if (!licenseInput.trim()) {
+            setActivationNote(t('proLicenseMissing'));
+            return;
+        }
+        setActivationBusy(true);
+        setActivationNote(null);
+        const success = await activate(licenseInput);
+        setActivationBusy(false);
+        if (success) {
+            setLicenseInput('');
+            setActivationNote(t('proActivationSuccess'));
         }
     };
 
@@ -121,7 +177,10 @@ const PreviewApp: React.FC = () => {
     if (!data) return <div className="p-8 text-center text-text-secondary">{t('previewNoData')}</div>;
 
     const domain = new URL(data.url).hostname;
-    const sortedIssues = [...data.issues].sort((a, b) => {
+    const licenseErrorMessage = resolveLicenseError();
+    const visibleIssues = isProActive ? data.issues : data.issues.filter((issue) => issue.tier !== 'pro');
+    const hiddenProCount = data.issues.length - visibleIssues.length;
+    const sortedIssues = [...visibleIssues].sort((a, b) => {
         const priority = { critical: 0, warning: 1, info: 2 };
         return priority[a.level] - priority[b.level];
     });
@@ -149,17 +208,30 @@ const PreviewApp: React.FC = () => {
                     </div>
                 </div>
                 <div className="flex items-center space-x-4">
-                    {data.issues.length === 0 ? (
+                    {visibleIssues.length === 0 ? (
                         <Badge label={t('severityOk')} severity="success" />
                     ) : (
-                        <Badge label={`${data.issues.length}`} severity={data.issues[0]?.level || 'info'} />
+                        <Badge label={`${visibleIssues.length}`} severity={visibleIssues[0]?.level || 'info'} />
                     )}
                     <div className="text-xs text-text-secondary">
                         {t('previewGeneratedAt', [new Date(data.metaGeneratedAt).toLocaleTimeString()])}
                     </div>
                     <Button variant="secondary" onClick={handleRefresh}>{t('previewRefresh')}</Button>
-                    <Button variant="secondary" onClick={handleCopySummary}>{t('previewCopySummary')}</Button>
-                    <Button onClick={handleExport}>{t('previewExportPng')}</Button>
+                    <Button
+                        variant="secondary"
+                        onClick={handleCopySummary}
+                        disabled={!isProActive}
+                        title={!isProActive ? t('proLockedCopy') : undefined}
+                    >
+                        {isProActive ? t('previewCopySummary') : `${t('previewCopySummary')}（${t('proBadge')}）`}
+                    </Button>
+                    <Button
+                        onClick={handleExport}
+                        disabled={!isProActive}
+                        title={!isProActive ? t('proLockedExport') : undefined}
+                    >
+                        {isProActive ? t('previewExportPng') : `${t('previewExportPng')}（${t('proBadge')}）`}
+                    </Button>
                 </div>
             </header>
 
@@ -199,15 +271,82 @@ const PreviewApp: React.FC = () => {
 
                 {/* Right: Diagnostics (2/5) */}
                 <div className="lg:col-span-2 space-y-6">
+                    <section className="bg-white p-4 rounded-xl border border-border-main shadow-sm space-y-3">
+                        <div className="flex items-start justify-between">
+                            <div>
+                                <div className="text-[11px] font-bold text-text-secondary uppercase tracking-wide-tag">{t('proBadge')}</div>
+                                <div className="text-sm font-bold text-text-main">
+                                    {isProActive
+                                        ? t('proStatusActive')
+                                        : proStatus?.expiresAt
+                                            ? t('proStatusExpired')
+                                            : t('proStatusInactive')}
+                                </div>
+                                {proStatus?.expiresAt && (
+                                    <div className="text-[11px] text-text-secondary">
+                                        {t('proExpiresAt', [formatExpiry(proStatus.expiresAt)])}
+                                    </div>
+                                )}
+                                {proStatus?.licenseKey && (
+                                    <div className="text-[11px] text-text-secondary font-mono">
+                                        {maskLicenseKey(proStatus.licenseKey)}
+                                    </div>
+                                )}
+                            </div>
+                            <Badge label={t('proBadge')} severity={isProActive ? 'success' : 'info'} />
+                        </div>
+                        {!isProActive && (
+                            <div className="text-xs text-text-secondary">{t('proUnlockHint')}</div>
+                        )}
+                        <div className="space-y-2">
+                            <label className="text-[10px] uppercase tracking-wide-tag text-text-secondary">{t('proLicenseLabel')}</label>
+                            <div className="flex gap-2">
+                                <input
+                                    className="flex-1 rounded-lg border border-border-main bg-bg px-3 py-2 text-xs text-text-main focus:outline-none focus:ring-2 focus:ring-accent-blue/20"
+                                    placeholder={t('proLicensePlaceholder')}
+                                    value={licenseInput}
+                                    onChange={(event) => {
+                                        setLicenseInput(event.target.value);
+                                        setActivationNote(null);
+                                    }}
+                                />
+                                <Button
+                                    variant="primary"
+                                    className="px-3"
+                                    onClick={handleActivate}
+                                    disabled={activationBusy}
+                                >
+                                    {t('proLicenseSubmit')}
+                                </Button>
+                            </div>
+                            {licenseErrorMessage && (
+                                <div className="text-[11px] text-accent-red">{licenseErrorMessage}</div>
+                            )}
+                            {activationNote && (
+                                <div className="text-[11px] text-text-secondary">{activationNote}</div>
+                            )}
+                        </div>
+                        <div className="flex gap-2">
+                            <Button variant="secondary" onClick={handleUpgrade}>
+                                {t('proUpgrade')}
+                            </Button>
+                        </div>
+                    </section>
+
                     <h2 className="text-xs font-bold text-text-secondary uppercase tracking-wide-tag mb-2 flex justify-between items-center">
                         <span>{t('previewAnalysis')}</span>
                         <div className="flex items-center gap-2">
-                            <span className="text-[10px] text-text-secondary">{t('previewIssuesCount', [String(data.issues.length)])}</span>
-                            <Badge label={`${data.issues.length}`} severity={data.issues[0]?.level || 'info'} />
+                            <span className="text-[10px] text-text-secondary">{t('previewIssuesCount', [String(visibleIssues.length)])}</span>
+                            <Badge label={`${visibleIssues.length}`} severity={visibleIssues[0]?.level || 'info'} />
                         </div>
                     </h2>
 
                     <div className="space-y-4">
+                        {!isProActive && hiddenProCount > 0 && (
+                            <div className="bg-bg p-3 rounded-xl border border-border-main text-xs text-text-secondary">
+                                {t('proHiddenIssues', [String(hiddenProCount)])}
+                            </div>
+                        )}
                         {(['critical', 'warning', 'info'] as const).map((level) => (
                             <div key={level} className="space-y-3">
                                 {groupedIssues[level].length > 0 && (
@@ -275,14 +414,14 @@ const PreviewApp: React.FC = () => {
                             {t('popupIssues')}（前 3）
                         </div>
                         <div className="space-y-2">
-                            {data.issues.slice(0, 3).map((issue) => (
+                            {visibleIssues.slice(0, 3).map((issue) => (
                                 <div key={issue.id} className="text-xs text-text-secondary">
                                     <span className="font-mono text-text-main mr-2">#{issue.id}</span>
                                     <span className="text-text-main font-semibold">{issue.title}</span>
                                     <span className="ml-2">{issue.detail}</span>
                                 </div>
                             ))}
-                            {data.issues.length === 0 && (
+                            {visibleIssues.length === 0 && (
                                 <div className="text-xs text-text-secondary">{t('previewAllClearDesc')}</div>
                             )}
                         </div>

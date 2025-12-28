@@ -4,6 +4,7 @@
     "version": "1.0.1",
     "description": "Professional SEO metadata preview and diagnostics.",
     "default_locale": "zh_CN",
+    "homepage_url": "https://seo-preview-tool-site.vercel.app",
     "action": {
         "default_popup": "src/popup/index.html",
         "default_icon": {

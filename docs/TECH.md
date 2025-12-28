@@ -92,12 +92,23 @@ extension/
 - 插件发布：Chrome Web Store
 - 落地页：Vercel 免费部署（无需域名）
 
-## 10. 支付与权限（待后续）
-- MVP 仅支付宝，可能需要：
-  - 购买页 / 支付回调 / 许可发放
-- 轻量后端优先：
-  - Vercel Functions（优先）
-  - VPS（如需长任务/重处理）
+## 10. 支付与权限（MVP）
+- 付费后发放 License Key，插件内验证后开通 Pro。
+- 授权验证 API：`/api/license/verify`（Vercel Functions）。
+- 验证通过后缓存到期时间，过期自动回退 Free。
+
+### 10.1 License API（Vercel Functions）
+- 位置：`site/api/license/verify.js`
+- 部署：Vercel 项目 Root Directory 指向 `site`
+- 请求：`POST` JSON `{ licenseKey }`
+- 响应：`{ valid, expiresAt, plan }`（无效返回 `valid:false`）
+- 环境变量：
+  - `LICENSE_KEYS`：JSON 映射（示例：`{\"ABC-123\": {\"expiresAt\": \"2026-01-01\", \"plan\": \"pro\"}}`）
+  - `LICENSE_CORS_ORIGIN`：允许的 Origin（默认 `*`）
+
+### 10.2 插件配置
+- `VITE_LICENSE_API_BASE`：License API 部署域名（如 `https://example.com`）
+- `VITE_UPGRADE_URL`：购买页链接（用于“升级 Pro”跳转，可选，未配置则读取 manifest 的 `homepage_url`）
 
 ## 11. 不在 MVP 的技术项
 - URL 批量抓取与解析
