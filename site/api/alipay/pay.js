@@ -24,7 +24,7 @@ module.exports = async (req, res) => {
     });
 
     const upgradePlan = req.query.plan === 'yearly' ? 'yearly' : 'monthly';
-    const amount = upgradePlan === 'yearly' ? '99.00' : '9.90';
+    const amount = upgradePlan === 'yearly' ? '499.00' : '59.00';
     const subject = upgradePlan === 'yearly' ? 'SEO预览工具 Pro年费' : 'SEO预览工具 Pro月费';
 
     // Order ID: Date + Random

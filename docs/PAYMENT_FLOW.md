@@ -1,37 +1,38 @@
-# 支付流程（MVP，手动续费）
+# 支付流程（Automated，支付宝）
 
 ## 目标
 - 仅人民币（支付宝）
-- 手动续费（无自动订阅）
-- 支付成功后开通 Pro
+- **自动发卡**：支付成功后即时生成 License Key
+- 无需数据库：使用签名验证（Stateless Signed Keys）
 
-## 建议流程
-1) 用户选择 Pro（月付/年付）
-2) 跳转支付页（支付宝）
-3) 支付成功后生成 License Key
-4) 用户在插件内输入 License Key 激活
-5) 验证通过后开通 Pro
+## 流程
+1) 用户在插件点击 "Upgrade Pro" -> 跳转官网落地页
+2) 官网展示价格方案（月付/年付）
+3) 用户点击 "立即购买" -> 跳转支付宝支付 (`/api/alipay/pay`)
+4) 支付成功 -> 跳转回调页 (`/api/alipay/return`)
+5) 回调页校验支付宝签名 -> **通过加密算法生成 Signed License Key**
+6) 页面展示激活码 -> 用户复制
+7) 用户在插件内输入激活码 -> 激活 Pro
 
-## 最小数据
-- order_id
-- plan（月付/年付）
-- 用户标识（邮箱或 license key）
-- status（paid/unpaid）
+## 数据模型（Stateless License）
+License Key 是一个包含签名数据的 Base64 字符串，结构如下：
+`Base64(Payload).Base64(Signature)`
 
-## 授权模型（简化）
-- 支付后生成 license key 并入库
-- 插件调用授权验证接口开通
+Payload:
+```json
+{
+  "licenseKey": "ORDER_ID",
+  "plan": "pro",
+  "expiresAt": 1767110400000,
+  "source": "alipay"
+}
+```
 
-## 授权与有效期（MVP）
-- 付费后开通期限：
-  - 月付：30 天
-  - 年付：365 天
-- 续费：到期后需手动续费，续费即延长有效期
-- 过期：到期后自动回退为 Free 功能
-- MVP 触发方式（建议）：支付成功后通过手动发放 license key 或手动标记开通
+## 授权验证 (`/api/license/verify`)
+1. 接收 Key
+2. 验证 Signature (使用 `ALIPAY_PRIVATE_KEY` 对应的公钥)
+3. 签名有效且未过期 -> 返回验证成功
 
 ## 备注
-- 文案明确：到期需手动续费
-- 不做自动续费开关
-- 授权验证接口：`/api/license/verify`
-- 手动发放时更新 `LICENSE_KEYS` 环境变量
+- 续费：目前设计为到期后再次购买生成新 Key（覆盖旧 Key）。
+- 安全性：私钥仅存储在 Vercel 环境变量，前端无法伪造。

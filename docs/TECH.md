@@ -100,11 +100,13 @@ extension/
 ### 10.1 License API（Vercel Functions）
 - 位置：`site/api/license/verify.js`
 - 部署：Vercel 项目 Root Directory 指向 `site`
-- 请求：`POST` JSON `{ licenseKey }`
-- 响应：`{ valid, expiresAt, plan }`（无效返回 `valid:false`）
+- 机制：**无状态验证 (Stateless Verification)**
+  - 核心：使用 `ALIPAY_PRIVATE_KEY` 对 License 进行 RSA/SHA256 签名。
+  - 验证：验证接口仅需公钥即可校验 Key 的合法性与过期时间，无需查询数据库。
 - 环境变量：
-  - `LICENSE_KEYS`：JSON 映射（示例：`{\"ABC-123\": {\"expiresAt\": \"2026-01-01\", \"plan\": \"pro\"}}`）
-  - `LICENSE_CORS_ORIGIN`：允许的 Origin（默认 `*`）
+  - `ALIPAY_PRIVATE_KEY`: 用于签名（生成）和导出公钥（验证）。
+  - `VITE_ALIPAY_APP_ID`: 支付宝应用 ID。
+  - `ALIPAY_PUBLIC_KEY`: 支付宝平台公钥（用于回调验签）。
 
 ### 10.2 插件配置
 - `VITE_LICENSE_API_BASE`：License API 部署域名（如 `https://example.com`）

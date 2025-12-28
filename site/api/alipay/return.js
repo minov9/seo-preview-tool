@@ -2,65 +2,65 @@ const AlipaySdk = require('alipay-sdk').default;
 const { signLicense } = require('../../util/crypto');
 
 module.exports = async (req, res) => {
-    const appId = process.env.VITE_ALIPAY_APP_ID;
-    const privateKey = process.env.ALIPAY_PRIVATE_KEY;
-    const alipayPublicKey = process.env.ALIPAY_PUBLIC_KEY;
+  const appId = process.env.VITE_ALIPAY_APP_ID;
+  const privateKey = process.env.ALIPAY_PRIVATE_KEY;
+  const alipayPublicKey = process.env.ALIPAY_PUBLIC_KEY;
 
-    if (!appId || !alipayPublicKey) {
-        return res.status(500).send('Missing Alipay Configuration');
+  if (!appId || !alipayPublicKey) {
+    return res.status(500).send('Missing Alipay Configuration');
+  }
+
+  const alipaySdk = new AlipaySdk({
+    appId,
+    privateKey,
+    alipayPublicKey,
+    endpoint: 'https://openapi.alipay.com/gateway.do'
+  });
+
+  // Verify parameters
+  const params = req.query;
+  // alipay-sdk's verify method might need customization for Vercel query params
+  // But generally alipaySdk.checkNotifySign or similar logic is needed.
+  // For 'return_url', Alipay parameters are in query.
+  // Note: 'sign_type' defaults to RSA2.
+
+  try {
+    // Basic verification: check signature
+    const isValid = alipaySdk.checkNotifySign(params);
+    if (!isValid) {
+      return res.status(400).send('Invalid Signature');
     }
 
-    const alipaySdk = new AlipaySdk({
-        appId,
-        privateKey,
-        alipayPublicKey,
-        endpoint: 'https://openapi.alipay.com/gateway.do'
-    });
+    // Extract info
+    // out_trade_no, trade_no, total_amount
+    const amount = params.total_amount;
 
-    // Verify parameters
-    const params = req.query;
-    // alipay-sdk's verify method might need customization for Vercel query params
-    // But generally alipaySdk.checkNotifySign or similar logic is needed.
-    // For 'return_url', Alipay parameters are in query.
-    // Note: 'sign_type' defaults to RSA2.
+    // Determine plan from amount (simple mapping)
+    // 9.90 -> monthly, 99.00 -> yearly
+    // Or check passback_params if we sent it?
+    // In pay.js we put plan in 'body', but return url params might not have it unless we passed it.
+    // However, we can infer from amount for MVP.
+    let plan = 'pro';
+    let durationDays = 30;
 
-    try {
-        // Basic verification: check signature
-        const isValid = alipaySdk.checkNotifySign(params);
-        if (!isValid) {
-            return res.status(400).send('Invalid Signature');
-        }
+    if (amount === '499.00') {
+      durationDays = 365;
+    }
 
-        // Extract info
-        // out_trade_no, trade_no, total_amount
-        const amount = params.total_amount;
+    const expiresAt = Date.now() + (durationDays * 24 * 60 * 60 * 1000);
+    const payload = {
+      licenseKey: params.out_trade_no, // Use order ID as base
+      plan: 'pro',
+      expiresAt: expiresAt,
+      source: 'alipay'
+    };
 
-        // Determine plan from amount (simple mapping)
-        // 9.90 -> monthly, 99.00 -> yearly
-        // Or check passback_params if we sent it?
-        // In pay.js we put plan in 'body', but return url params might not have it unless we passed it.
-        // However, we can infer from amount for MVP.
-        let plan = 'pro';
-        let durationDays = 30;
+    // Generate Signed Key
+    const signedKey = signLicense(payload);
 
-        if (amount === '99.00') {
-            durationDays = 365;
-        }
-
-        const expiresAt = Date.now() + (durationDays * 24 * 60 * 60 * 1000);
-        const payload = {
-            licenseKey: params.out_trade_no, // Use order ID as base
-            plan: 'pro',
-            expiresAt: expiresAt,
-            source: 'alipay'
-        };
-
-        // Generate Signed Key
-        const signedKey = signLicense(payload);
-
-        // Render HTML result
-        res.setHeader('Content-Type', 'text/html; charset=utf-8');
-        res.send(`
+    // Render HTML result
+    res.setHeader('Content-Type', 'text/html; charset=utf-8');
+    res.send(`
       <!DOCTYPE html>
       <html>
       <head>
@@ -99,8 +99,8 @@ module.exports = async (req, res) => {
       </html>
     `);
 
-    } catch (err) {
-        console.error('Verify Error:', err);
-        res.status(500).send('Verification Failed: ' + err.message);
-    }
+  } catch (err) {
+    console.error('Verify Error:', err);
+    res.status(500).send('Verification Failed: ' + err.message);
+  }
 };
