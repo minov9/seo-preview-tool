@@ -2,7 +2,10 @@
     "name": "seo-preview-tool-site",
     "version": "1.0.0",
     "private": true,
+    "engines": {
+        "node": "20.x"
+    },
     "dependencies": {
-        "alipay-sdk": "^3.6.1"
+        "dotenv": "^17.2.3"
     }
 }

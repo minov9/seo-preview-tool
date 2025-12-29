@@ -1,11 +1,20 @@
 import type { ScanResult, Issue } from './types';
 
 // Thresholds from RULES.md
+const SERP = {
+    title: {
+        lineWidth: 600,
+        maxLines: 2,
+        minWidth: 200
+    },
+    description: {
+        lineWidth: 600,
+        maxLines: 2,
+        minWidth: 400
+    }
+};
+
 const THRESHOLDS = {
-    titleMin: 200,
-    titleMax: 580,
-    descMin: 400,
-    descMax: 920,
     ogWidth: 1200,
     ogHeight: 630,
     ogRatio: 1.91
@@ -44,6 +53,11 @@ function similarityScore(a?: string, b?: string) {
     const total = Array.from(leftPairs.values()).reduce((sum, count) => sum + count, 0)
         + Array.from(rightPairs.values()).reduce((sum, count) => sum + count, 0);
     return total === 0 ? 0 : (2 * intersection) / total;
+}
+
+function estimateLines(pxWidth?: number, lineWidth?: number) {
+    if (!pxWidth || !lineWidth) return 0;
+    return Math.ceil(pxWidth / lineWidth);
 }
 
 function normalizeUrl(value?: string, base?: string) {
@@ -86,24 +100,26 @@ export function evaluateRules(data: Omit<ScanResult, 'issues'>): Issue[] {
     }
 
     // R-003 Title 过长
-    if (title.value && (title.pxWidth || 0) > THRESHOLDS.titleMax) {
+    const titleLines = estimateLines(title.pxWidth, SERP.title.lineWidth);
+    if (title.value && titleLines > SERP.title.maxLines) {
         issues.push({
             id: 'R-003',
             level: 'warning',
             title: 'Title 过长',
-            detail: `当前 ${title.pxWidth}px，超过建议上限 580px`,
+            detail: `预计 ${titleLines} 行，超过建议 ${SERP.title.maxLines} 行`,
             suggestion: '缩短标题前半部分',
             tier: 'free'
         });
     }
 
     // R-004 Description 过长
-    if (description.value && (description.pxWidth || 0) > THRESHOLDS.descMax) {
+    const descLines = estimateLines(description.pxWidth, SERP.description.lineWidth);
+    if (description.value && descLines > SERP.description.maxLines) {
         issues.push({
             id: 'R-004',
             level: 'warning',
             title: 'Description 过长',
-            detail: `当前 ${description.pxWidth}px，超过建议上限 920px`,
+            detail: `预计 ${descLines} 行，超过建议 ${SERP.description.maxLines} 行`,
             suggestion: '精简描述，保留关键信息',
             tier: 'free'
         });
@@ -136,24 +152,24 @@ export function evaluateRules(data: Omit<ScanResult, 'issues'>): Issue[] {
     }
 
     // R-101 Title 过短
-    if (title.value && (title.pxWidth || 0) > 0 && (title.pxWidth || 0) < THRESHOLDS.titleMin) {
+    if (title.value && (title.pxWidth || 0) > 0 && (title.pxWidth || 0) < SERP.title.minWidth) {
         issues.push({
             id: 'R-101',
             level: 'info',
             title: 'Title 过短',
-            detail: `当前 ${title.pxWidth}px，低于建议下限 200px`,
+            detail: `当前 ${title.pxWidth}px，低于建议下限 ${SERP.title.minWidth}px`,
             suggestion: '补充核心关键词',
             tier: 'pro'
         });
     }
 
     // R-102 Description 过短
-    if (description.value && (description.pxWidth || 0) > 0 && (description.pxWidth || 0) < THRESHOLDS.descMin) {
+    if (description.value && (description.pxWidth || 0) > 0 && (description.pxWidth || 0) < SERP.description.minWidth) {
         issues.push({
             id: 'R-102',
             level: 'info',
             title: 'Description 过短',
-            detail: `当前 ${description.pxWidth}px，低于建议下限 400px`,
+            detail: `当前 ${description.pxWidth}px，低于建议下限 ${SERP.description.minWidth}px`,
             suggestion: '补充关键信息与卖点',
             tier: 'pro'
         });

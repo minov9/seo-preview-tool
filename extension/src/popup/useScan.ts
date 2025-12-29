@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import type { ScanResult, ScanMessageResponse } from '../shared/types';
 import { t } from '../shared/i18n';
+import { isRestrictedUrl } from '../shared/url';
 
 export function useScan() {
     const [loading, setLoading] = useState(true);
@@ -18,8 +19,7 @@ export function useScan() {
                 throw new Error(t('popupErrorNoTab'));
             }
 
-            // Skip chrome://, edge://, etc.
-            if (tab.url?.startsWith('chrome://') || tab.url?.startsWith('edge://') || tab.url?.startsWith('about:')) {
+            if (isRestrictedUrl(tab.url)) {
                 throw new Error(t('popupErrorInternal'));
             }
 
@@ -31,8 +31,11 @@ export function useScan() {
                 const response: ScanMessageResponse = await chrome.tabs.sendMessage(tab.id, { type: 'SCAN_PAGE' });
                 if (response.success && response.data) {
                     setData(response.data);
-                    // Save to storage for Preview page
-                    await chrome.storage.local.set({ 'lastScan': response.data });
+                    await chrome.storage.local.set({
+                        lastScan: response.data,
+                        lastScanTabId: tab.id,
+                        lastScanUrl: tab.url || ''
+                    });
                     return;
                 }
                 setError(response.error || t('popupErrorConnectionFailed'));
@@ -41,12 +44,16 @@ export function useScan() {
                 try {
                     await chrome.scripting.executeScript({
                         target: { tabId: tab.id },
-                        files: ['assets/scan.js']
+                        files: ['scan.js']
                     });
                     const retry: ScanMessageResponse = await chrome.tabs.sendMessage(tab.id, { type: 'SCAN_PAGE' });
                     if (retry.success && retry.data) {
                         setData(retry.data);
-                        await chrome.storage.local.set({ 'lastScan': retry.data });
+                        await chrome.storage.local.set({
+                            lastScan: retry.data,
+                            lastScanTabId: tab.id,
+                            lastScanUrl: tab.url || ''
+                        });
                         return;
                     }
                     setError(retry.error || t('popupErrorConnectionFailed'));

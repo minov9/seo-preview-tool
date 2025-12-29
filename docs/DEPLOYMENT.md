@@ -1,29 +1,35 @@
-# 部署记录（SEO Preview）
+# 部署（AI 自动执行 Runbook）
 
-## 1. 真实项目位置（不要在仓库根目录跑 Vercel）
+## 目的
+- 由 AI 自动完成站点与 API 的部署。
+- 人不手动操作，AI 按本流程执行。
+
+## 关键约束
 - Vercel 项目只绑定在 `site/` 目录。
-- 源信息：`site/.vercel/project.json`
-  - projectName: seo-preview-tool-site
-  - org/team: x233s-projects
+- **禁止**在仓库根目录执行 Vercel 命令。
+- 绑定信息来源：`site/.vercel/project.json`
 
-> 结论：所有 Vercel CLI 操作必须在 `site/` 目录执行。
-
-## 2. 生产域名（默认建议）
-- 站点 + License API 基础域名：`https://seo-preview-tool-site.vercel.app`
-- License 校验接口：`/api/license/verify`
-
-如使用自定义域名，替换上述域名即可。
-
-## 3. 插件侧配置
-- `VITE_LICENSE_API_BASE`: 上述域名
-- `VITE_UPGRADE_URL`: 同上（购买/引导页）
-
-## 4. CLI 核验命令（固定流程）
+## 执行步骤（AI）
+1) 进入目录：
 ```bash
 cd site
-vercel ls
 ```
 
-## 5. 备注
-- 仓库根目录的 `.vercel` 如出现，视为误链接（忽略/删除）。
-- GitHub 仓库：`https://github.com/minov9/seo-preview-tool.git`
+2) 同步项目配置（若需拉取环境变量）：
+```bash
+vercel pull --yes
+```
+
+3) 生产部署：
+```bash
+vercel deploy --prod
+```
+
+## 验证（AI）
+1) 记录部署输出中的生产域名（如 `https://seo-preview-tool-site.vercel.app`）。
+2) 打开落地页，确认无支付入口与价格卡片。
+
+## 异常处理（AI）
+- 若提示未登录：执行 `vercel login` 并等待完成授权后重试。
+- 若部署输出域名为空：重试 `vercel deploy --prod`。
+- 若 API 失败：优先检查 Vercel 部署是否成功或环境变量是否缺失。

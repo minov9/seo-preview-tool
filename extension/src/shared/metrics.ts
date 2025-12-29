@@ -3,7 +3,7 @@
  * 目标：与预览 UI 的字号/字重一致
  */
 
-const FONT_STACK = 'Sora, "Noto Sans SC", "PingFang SC", Arial, sans-serif';
+const FONT_STACK = '"Roboto", "Arial", "Noto Sans SC", "PingFang SC", sans-serif';
 
 export function getTextWidth(text: string, font: string): number {
     if (typeof document === 'undefined') return 0;
@@ -18,11 +18,11 @@ export function getTextWidth(text: string, font: string): number {
 }
 
 export function getTitleWidth(text: string): number {
-    // Title: 20px, 600
-    return getTextWidth(text, `600 20px ${FONT_STACK}`);
+    // Google desktop title: 20px, regular
+    return getTextWidth(text, `400 20px ${FONT_STACK}`);
 }
 
 export function getDescriptionWidth(text: string): number {
-    // Description: 14px, 400
+    // Google desktop snippet: 14px, regular
     return getTextWidth(text, `400 14px ${FONT_STACK}`);
 }

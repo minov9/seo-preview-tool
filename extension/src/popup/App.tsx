@@ -6,22 +6,10 @@ import { Button } from '../shared/components/Button';
 import { Badge } from '../shared/components/Badge';
 import { useScan } from './useScan';
 import { t } from '../shared/i18n';
-import { useProStatus } from '../shared/useProStatus';
-import { resolveUpgradeUrl } from '../shared/pro';
 
 const App: React.FC = () => {
     const { data, loading, error, reScan } = useScan();
     const [device, setDevice] = useState<'desktop' | 'mobile'>('desktop');
-    const { isActive: isProActive } = useProStatus();
-    const upgradeUrl = resolveUpgradeUrl();
-
-    const handleUpgrade = () => {
-        if (!upgradeUrl) {
-            alert(t('proUpgradeUnavailable'));
-            return;
-        }
-        chrome.tabs.create({ url: upgradeUrl });
-    };
 
     const domain = (() => {
         if (!data) return '...';
@@ -51,8 +39,7 @@ const App: React.FC = () => {
         );
     }
 
-    const visibleIssues = isProActive ? data.issues : data.issues.filter((issue) => issue.tier !== 'pro');
-    const hiddenProCount = data.issues.length - visibleIssues.length;
+    const visibleIssues = data.issues;
     const issueCount = visibleIssues.length;
     // Limit to Top 3 for popup
     const topIssues = visibleIssues.slice(0, 3);
@@ -141,22 +128,6 @@ const App: React.FC = () => {
                         </div>
                     )}
 
-                    {!isProActive && (
-                        <div className="mt-2 flex items-center justify-between text-[10px] text-text-secondary">
-                            <span>
-                                {hiddenProCount > 0
-                                    ? t('proHiddenIssues', [String(hiddenProCount)])
-                                    : t('proUnlockHint')}
-                            </span>
-                            <Button
-                                variant="outline"
-                                className="px-2 py-1 text-[10px]"
-                                onClick={handleUpgrade}
-                            >
-                                {t('proUpgrade')}
-                            </Button>
-                        </div>
-                    )}
                 </section>
             </main>
 

@@ -38,29 +38,19 @@
 - 诊断按严重度分组
 
 ## 阶段 4 - 规则引擎
-- 实现 Free + Pro 规则（docs/RULES.md）
 - 统一问题结构（id/level/title/detail/suggestion）
+- 规则等级（critical/warning/info）输出一致
 
 验收：
 - 规则输出一致
-- Free/Pro 边界生效
 
-## 阶段 5 - 导出（Pro）
+## 阶段 5 - 导出
 - 导出 PNG（预览区域）
 - 复制文本摘要
 
 验收：
 - PNG 输出符合导出规范
 - 摘要复制可用
-
-## 阶段 5.5 - 付费与授权（MVP）
-- Pro 功能开关（导出/高级诊断）
-- 授权验证 API（Vercel Functions）
-- 授权激活入口与升级引导
-
-验收：
-- 未激活时高级诊断/导出不可用
-- 输入 License 可激活并记录到期
 
 ## 阶段 6 - 打磨与发布
 - 错误态/加载态

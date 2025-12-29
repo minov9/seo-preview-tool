@@ -1,14 +1,41 @@
-import React, { useEffect, useState, useRef, useCallback } from 'react';
+import React, { useEffect, useState, useRef, useCallback, useMemo } from 'react';
 import type { ScanResult, Issue } from '../shared/types';
 import { Button } from '../shared/components/Button';
 import { Badge } from '../shared/components/Badge';
 import { PreviewCard } from '../shared/components/PreviewCard';
 import { SharePreviewCard } from '../shared/components/SharePreviewCard';
+import { CodeSnippet } from '../shared/components/Editor/CodeSnippet';
 import { toPng } from 'html-to-image';
 import { t } from '../shared/i18n';
-import { useProStatus } from '../shared/useProStatus';
-import { formatExpiry, maskLicenseKey, resolveUpgradeUrl } from '../shared/pro';
+import { getDescriptionWidth, getTitleWidth } from '../shared/metrics';
+import { isRestrictedUrl } from '../shared/url';
 
+function escapeHtml(value: string) {
+    return value
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+}
+
+function buildHtmlSnippet(title: string, description: string, image: string) {
+    const lines: string[] = [];
+    const cleanTitle = title.trim();
+    const cleanDescription = description.trim();
+    const cleanImage = image.trim();
+
+    if (cleanTitle) {
+        lines.push(`<title>${escapeHtml(cleanTitle)}</title>`);
+    }
+    if (cleanDescription) {
+        lines.push(`<meta name="description" content="${escapeHtml(cleanDescription)}">`);
+    }
+    if (cleanImage) {
+        lines.push(`<meta property="og:image" content="${escapeHtml(cleanImage)}">`);
+    }
+
+    return lines.join('\n');
+}
 
 const PreviewApp: React.FC = () => {
     const [data, setData] = useState<ScanResult | null>(null);
@@ -16,17 +43,40 @@ const PreviewApp: React.FC = () => {
     const [error, setError] = useState<string | null>(null);
     const [device, setDevice] = useState<'desktop' | 'mobile'>('desktop');
     const exportRef = useRef<HTMLDivElement>(null);
-    const { status: proStatus, error: proError, isActive: isProActive, activate } = useProStatus();
-    const [licenseInput, setLicenseInput] = useState('');
-    const [activationNote, setActivationNote] = useState<string | null>(null);
-    const [activationBusy, setActivationBusy] = useState(false);
-    const upgradeUrl = resolveUpgradeUrl();
+    const [draftTitle, setDraftTitle] = useState('');
+    const [draftDescription, setDraftDescription] = useState('');
+    const [draftOgImage, setDraftOgImage] = useState('');
+    const [copyNote, setCopyNote] = useState<string | null>(null);
+
+    const draftData = useMemo(() => {
+        if (!data) return null;
+        const nextTitle = draftTitle.trim();
+        const nextDescription = draftDescription.trim();
+        return {
+            ...data,
+            title: {
+                ...data.title,
+                value: nextTitle,
+                pxWidth: getTitleWidth(nextTitle)
+            },
+            description: {
+                ...data.description,
+                value: nextDescription,
+                pxWidth: getDescriptionWidth(nextDescription)
+            },
+            og: {
+                ...data.og,
+                image: draftOgImage.trim()
+            }
+        };
+    }, [data, draftTitle, draftDescription, draftOgImage]);
+
+    const htmlSnippet = useMemo(
+        () => buildHtmlSnippet(draftTitle, draftDescription, draftOgImage),
+        [draftTitle, draftDescription, draftOgImage]
+    );
 
     const handleExport = async () => {
-        if (!isProActive) {
-            setActivationNote(t('proLockedExport'));
-            return;
-        }
         if (exportRef.current === null) {
             return;
         }
@@ -48,10 +98,6 @@ const PreviewApp: React.FC = () => {
     };
 
     const handleCopySummary = async () => {
-        if (!isProActive) {
-            setActivationNote(t('proLockedCopy'));
-            return;
-        }
         if (!data) return;
         const topIssues = data.issues.slice(0, 3);
         const lines = [
@@ -71,44 +117,18 @@ const PreviewApp: React.FC = () => {
         }
     };
 
-    const resolveLicenseError = () => {
-        if (!proError) return null;
-        switch (proError.code) {
-            case 'missing':
-                return t('proLicenseMissing');
-            case 'not_configured':
-                return t('proLicenseNotConfigured');
-            case 'invalid':
-                return t('proLicenseInvalid');
-            case 'expired':
-                return t('proLicenseExpired');
-            case 'network':
-                return t('proLicenseNetworkError');
-            default:
-                return proError.message || t('proLicenseNetworkError');
-        }
-    };
-
-    const handleUpgrade = () => {
-        if (!upgradeUrl) {
-            setActivationNote(t('proUpgradeUnavailable'));
+    const handleCopyHtml = async () => {
+        setCopyNote(null);
+        if (!htmlSnippet) {
+            setCopyNote(t('editorCopyEmpty'));
             return;
         }
-        chrome.tabs.create({ url: upgradeUrl });
-    };
-
-    const handleActivate = async () => {
-        if (!licenseInput.trim()) {
-            setActivationNote(t('proLicenseMissing'));
-            return;
-        }
-        setActivationBusy(true);
-        setActivationNote(null);
-        const success = await activate(licenseInput);
-        setActivationBusy(false);
-        if (success) {
-            setLicenseInput('');
-            setActivationNote(t('proActivationSuccess'));
+        try {
+            await navigator.clipboard.writeText(htmlSnippet);
+            setCopyNote(t('editorCopySuccess'));
+        } catch (err) {
+            console.error('Failed to copy HTML', err);
+            setCopyNote(t('editorCopyFailed'));
         }
     };
 
@@ -123,7 +143,7 @@ const PreviewApp: React.FC = () => {
                 return;
             }
 
-            if (tab.url?.startsWith('chrome://') || tab.url?.startsWith('edge://') || tab.url?.startsWith('about:')) {
+            if (isRestrictedUrl(tab.url)) {
                 setError(t('popupErrorInternal'));
                 return;
             }
@@ -132,19 +152,27 @@ const PreviewApp: React.FC = () => {
                 const response = await chrome.tabs.sendMessage(tab.id, { type: 'SCAN_PAGE' });
                 if (response?.success && response.data) {
                     setData(response.data as ScanResult);
-                    await chrome.storage.local.set({ lastScan: response.data });
+                    await chrome.storage.local.set({
+                        lastScan: response.data,
+                        lastScanTabId: tab.id,
+                        lastScanUrl: tab.url || ''
+                    });
                     return;
                 }
                 setError(response?.error || t('popupErrorConnectionFailed'));
             } catch (err) {
                 await chrome.scripting.executeScript({
                     target: { tabId: tab.id },
-                    files: ['assets/scan.js']
+                    files: ['scan.js']
                 });
                 const retry = await chrome.tabs.sendMessage(tab.id, { type: 'SCAN_PAGE' });
                 if (retry?.success && retry.data) {
                     setData(retry.data as ScanResult);
-                    await chrome.storage.local.set({ lastScan: retry.data });
+                    await chrome.storage.local.set({
+                        lastScan: retry.data,
+                        lastScanTabId: tab.id,
+                        lastScanUrl: tab.url || ''
+                    });
                     return;
                 }
                 setError(retry?.error || t('popupErrorConnectionFailed'));
@@ -172,14 +200,21 @@ const PreviewApp: React.FC = () => {
         loadData();
     }, []);
 
+    useEffect(() => {
+        if (!data) return;
+        setDraftTitle(data.title.value || '');
+        setDraftDescription(data.description.value || '');
+        setDraftOgImage(data.og.image || data.twitter.image || '');
+        setCopyNote(null);
+    }, [data]);
+
     if (loading) return <div className="p-8 text-center text-text-secondary">{t('previewLoading')}</div>;
     if (error) return <div className="p-8 text-center text-text-secondary">{error}</div>;
     if (!data) return <div className="p-8 text-center text-text-secondary">{t('previewNoData')}</div>;
 
     const domain = new URL(data.url).hostname;
-    const licenseErrorMessage = resolveLicenseError();
-    const visibleIssues = isProActive ? data.issues : data.issues.filter((issue) => issue.tier !== 'pro');
-    const hiddenProCount = data.issues.length - visibleIssues.length;
+    const activeData = draftData || data;
+    const visibleIssues = data.issues;
     const sortedIssues = [...visibleIssues].sort((a, b) => {
         const priority = { critical: 0, warning: 1, info: 2 };
         return priority[a.level] - priority[b.level];
@@ -195,7 +230,6 @@ const PreviewApp: React.FC = () => {
 
     return (
         <div className="min-h-screen bg-bg text-text-main font-sans selection:bg-accent-blue/20">
-            {/* Top Bar */}
             <header className="h-16 border-b border-border-main bg-white px-8 flex justify-between items-center sticky top-0 z-20">
                 <div className="flex items-center space-x-3">
                     <div className="w-6 h-6 bg-text-main rounded-lg flex items-center justify-center">
@@ -220,119 +254,127 @@ const PreviewApp: React.FC = () => {
                     <Button
                         variant="secondary"
                         onClick={handleCopySummary}
-                        disabled={!isProActive}
-                        title={!isProActive ? t('proLockedCopy') : undefined}
                     >
-                        {isProActive ? t('previewCopySummary') : `${t('previewCopySummary')}（${t('proBadge')}）`}
+                        {t('previewCopySummary')}
                     </Button>
                     <Button
                         onClick={handleExport}
-                        disabled={!isProActive}
-                        title={!isProActive ? t('proLockedExport') : undefined}
                     >
-                        {isProActive ? t('previewExportPng') : `${t('previewExportPng')}（${t('proBadge')}）`}
+                        {t('previewExportPng')}
                     </Button>
                 </div>
             </header>
 
-            <main className="max-w-6xl mx-auto p-8 grid grid-cols-1 lg:grid-cols-5 gap-8 bg-bg">
-                {/* Left: Preview Area (3/5) */}
-                <div className="lg:col-span-3 space-y-8">
-                    <section>
-                        <div className="flex items-center justify-between mb-4">
-                            <h2 className="text-xs font-bold text-text-secondary uppercase tracking-wide-tag">{t('previewSearchPreview')}</h2>
-                            <div className="flex items-center gap-2">
-                                <Button
-                                    variant={device === 'desktop' ? 'primary' : 'outline'}
-                                    className="px-3 py-1 text-[10px]"
-                                    onClick={() => setDevice('desktop')}
-                                >
-                                    {t('previewDeviceDesktop')}
-                                </Button>
-                                <Button
-                                    variant={device === 'mobile' ? 'primary' : 'outline'}
-                                    className="px-3 py-1 text-[10px]"
-                                    onClick={() => setDevice('mobile')}
-                                >
-                                    {t('previewDeviceMobile')}
-                                </Button>
-                            </div>
-                        </div>
-                        <div className="transform scale-100 origin-top-left">
-                            <PreviewCard data={data} device={device} showMetrics />
-                        </div>
-                    </section>
-
-                    <section>
-                        <h2 className="text-xs font-bold text-text-secondary uppercase tracking-wide-tag mb-4">{t('previewSocialPreview')}</h2>
-                        <SharePreviewCard data={data} size="full" />
-                    </section>
-                </div>
-
-                {/* Right: Diagnostics (2/5) */}
-                <div className="lg:col-span-2 space-y-6">
-                    <section className="bg-white p-4 rounded-xl border border-border-main shadow-sm space-y-3">
-                        <div className="flex items-start justify-between">
+            <main className="max-w-6xl mx-auto p-8 space-y-10 bg-bg">
+                <section className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    <div className="space-y-4">
+                        <div className="bg-white p-5 rounded-xl border border-border-main shadow-sm space-y-4">
                             <div>
-                                <div className="text-[11px] font-bold text-text-secondary uppercase tracking-wide-tag">{t('proBadge')}</div>
-                                <div className="text-sm font-bold text-text-main">
-                                    {isProActive
-                                        ? t('proStatusActive')
-                                        : proStatus?.expiresAt
-                                            ? t('proStatusExpired')
-                                            : t('proStatusInactive')}
-                                </div>
-                                {proStatus?.expiresAt && (
-                                    <div className="text-[11px] text-text-secondary">
-                                        {t('proExpiresAt', [formatExpiry(proStatus.expiresAt)])}
-                                    </div>
-                                )}
-                                {proStatus?.licenseKey && (
-                                    <div className="text-[11px] text-text-secondary font-mono">
-                                        {maskLicenseKey(proStatus.licenseKey)}
-                                    </div>
-                                )}
+                                <div className="text-[11px] font-bold text-text-secondary uppercase tracking-wide-tag">{t('editorTitle')}</div>
+                                <div className="text-sm font-bold text-text-main">{t('editorSubtitle')}</div>
+                                <div className="text-xs text-text-secondary">{t('editorNote')}</div>
                             </div>
-                            <Badge label={t('proBadge')} severity={isProActive ? 'success' : 'info'} />
-                        </div>
-                        {!isProActive && (
-                            <div className="text-xs text-text-secondary">{t('proUnlockHint')}</div>
-                        )}
-                        <div className="space-y-2">
-                            <label className="text-[10px] uppercase tracking-wide-tag text-text-secondary">{t('proLicenseLabel')}</label>
-                            <div className="flex gap-2">
+
+                            <div className="space-y-2">
+                                <div className="flex items-center justify-between">
+                                    <label className="text-[10px] uppercase tracking-wide-tag text-text-secondary">{t('editorTitleLabel')}</label>
+                                    <span className="text-[10px] text-text-secondary">{t('editorCharCount', [String(draftTitle.length)])}</span>
+                                </div>
                                 <input
-                                    className="flex-1 rounded-lg border border-border-main bg-bg px-3 py-2 text-xs text-text-main focus:outline-none focus:ring-2 focus:ring-accent-blue/20"
-                                    placeholder={t('proLicensePlaceholder')}
-                                    value={licenseInput}
+                                    className="w-full rounded-lg border border-border-main bg-bg px-3 py-2 text-sm text-text-main focus:outline-none focus:ring-2 focus:ring-accent-blue/20"
+                                    placeholder={t('editorTitlePlaceholder')}
+                                    value={draftTitle}
                                     onChange={(event) => {
-                                        setLicenseInput(event.target.value);
-                                        setActivationNote(null);
+                                        setDraftTitle(event.target.value);
+                                        setCopyNote(null);
                                     }}
                                 />
-                                <Button
-                                    variant="primary"
-                                    className="px-3"
-                                    onClick={handleActivate}
-                                    disabled={activationBusy}
-                                >
-                                    {t('proLicenseSubmit')}
-                                </Button>
+                                <div className="text-[11px] text-text-secondary">{t('editorTitleHint')}</div>
                             </div>
-                            {licenseErrorMessage && (
-                                <div className="text-[11px] text-accent-red">{licenseErrorMessage}</div>
-                            )}
-                            {activationNote && (
-                                <div className="text-[11px] text-text-secondary">{activationNote}</div>
-                            )}
-                        </div>
-                        <div className="flex gap-2">
-                            <Button variant="secondary" onClick={handleUpgrade}>
-                                {t('proUpgrade')}
-                            </Button>
-                        </div>
-                    </section>
 
+                            <div className="space-y-2">
+                                <div className="flex items-center justify-between">
+                                    <label className="text-[10px] uppercase tracking-wide-tag text-text-secondary">{t('editorDescriptionLabel')}</label>
+                                    <span className="text-[10px] text-text-secondary">{t('editorCharCount', [String(draftDescription.length)])}</span>
+                                </div>
+                                <textarea
+                                    className="w-full min-h-[96px] rounded-lg border border-border-main bg-bg px-3 py-2 text-sm text-text-main focus:outline-none focus:ring-2 focus:ring-accent-blue/20"
+                                    placeholder={t('editorDescriptionPlaceholder')}
+                                    value={draftDescription}
+                                    onChange={(event) => {
+                                        setDraftDescription(event.target.value);
+                                        setCopyNote(null);
+                                    }}
+                                />
+                                <div className="text-[11px] text-text-secondary">{t('editorDescriptionHint')}</div>
+                            </div>
+
+                            <div className="space-y-2">
+                                <label className="text-[10px] uppercase tracking-wide-tag text-text-secondary">{t('editorOgImageLabel')}</label>
+                                <input
+                                    className="w-full rounded-lg border border-border-main bg-bg px-3 py-2 text-sm text-text-main focus:outline-none focus:ring-2 focus:ring-accent-blue/20"
+                                    placeholder={t('editorOgImagePlaceholder')}
+                                    value={draftOgImage}
+                                    onChange={(event) => {
+                                        setDraftOgImage(event.target.value);
+                                        setCopyNote(null);
+                                    }}
+                                />
+                                <div className="text-[11px] text-text-secondary">{t('editorOgImageHint')}</div>
+                            </div>
+
+                            <div className="space-y-2">
+                                <div className="flex items-center justify-between">
+                                    <div className="text-[10px] uppercase tracking-wide-tag text-text-secondary">{t('editorCodeLabel')}</div>
+                                    <Button
+                                        variant="primary"
+                                        className="px-3"
+                                        onClick={handleCopyHtml}
+                                        disabled={!htmlSnippet}
+                                    >
+                                        {t('editorCopyHtml')}
+                                    </Button>
+                                </div>
+                                <CodeSnippet value={htmlSnippet} placeholder={t('editorCodePlaceholder')} />
+                                {copyNote && <div className="text-[11px] text-text-secondary">{copyNote}</div>}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="space-y-8">
+                        <section>
+                            <div className="flex items-center justify-between mb-4">
+                                <h2 className="text-xs font-bold text-text-secondary uppercase tracking-wide-tag">{t('previewSearchPreview')}</h2>
+                                <div className="flex items-center gap-2">
+                                    <Button
+                                        variant={device === 'desktop' ? 'primary' : 'outline'}
+                                        className="px-3 py-1 text-[10px]"
+                                        onClick={() => setDevice('desktop')}
+                                    >
+                                        {t('previewDeviceDesktop')}
+                                    </Button>
+                                    <Button
+                                        variant={device === 'mobile' ? 'primary' : 'outline'}
+                                        className="px-3 py-1 text-[10px]"
+                                        onClick={() => setDevice('mobile')}
+                                    >
+                                        {t('previewDeviceMobile')}
+                                    </Button>
+                                </div>
+                            </div>
+                            <div className="transform scale-100 origin-top-left">
+                                <PreviewCard data={activeData} device={device} showMetrics />
+                            </div>
+                        </section>
+
+                        <section>
+                            <h2 className="text-xs font-bold text-text-secondary uppercase tracking-wide-tag mb-4">{t('previewSocialPreview')}</h2>
+                            <SharePreviewCard data={activeData} size="full" />
+                        </section>
+                    </div>
+                </section>
+
+                <section className="space-y-4">
                     <h2 className="text-xs font-bold text-text-secondary uppercase tracking-wide-tag mb-2 flex justify-between items-center">
                         <span>{t('previewAnalysis')}</span>
                         <div className="flex items-center gap-2">
@@ -342,11 +384,6 @@ const PreviewApp: React.FC = () => {
                     </h2>
 
                     <div className="space-y-4">
-                        {!isProActive && hiddenProCount > 0 && (
-                            <div className="bg-bg p-3 rounded-xl border border-border-main text-xs text-text-secondary">
-                                {t('proHiddenIssues', [String(hiddenProCount)])}
-                            </div>
-                        )}
                         {(['critical', 'warning', 'info'] as const).map((level) => (
                             <div key={level} className="space-y-3">
                                 {groupedIssues[level].length > 0 && (
@@ -402,13 +439,13 @@ const PreviewApp: React.FC = () => {
                             <div><span className="font-semibold text-text-main">H1 内容:</span> {data.h1.text || '-'}</div>
                         </div>
                     </details>
-                </div>
+                </section>
             </main>
 
             <div className="fixed -left-[9999px] top-0">
                 <div ref={exportRef} className="w-[1200px] bg-bg p-6 space-y-4">
-                    <PreviewCard data={data} device={device} showMetrics />
-                    <SharePreviewCard data={data} size="full" />
+                    <PreviewCard data={activeData} device={device} showMetrics />
+                    <SharePreviewCard data={activeData} size="full" />
                     <div className="bg-white p-4 rounded-xl border border-border-main shadow-layered">
                         <div className="text-xs font-bold text-text-secondary uppercase tracking-wide-tag mb-3">
                             {t('popupIssues')}（前 3）
@@ -418,12 +455,8 @@ const PreviewApp: React.FC = () => {
                                 <div key={issue.id} className="text-xs text-text-secondary">
                                     <span className="font-mono text-text-main mr-2">#{issue.id}</span>
                                     <span className="text-text-main font-semibold">{issue.title}</span>
-                                    <span className="ml-2">{issue.detail}</span>
                                 </div>
                             ))}
-                            {visibleIssues.length === 0 && (
-                                <div className="text-xs text-text-secondary">{t('previewAllClearDesc')}</div>
-                            )}
                         </div>
                     </div>
                 </div>

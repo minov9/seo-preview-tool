@@ -14,7 +14,6 @@ export default defineConfig({
       input: {
         popup: resolve(__dirname, 'src/popup/index.html'),
         preview: resolve(__dirname, 'src/preview/index.html'),
-        scan: resolve(__dirname, 'src/content/scan.ts'),
       },
       output: {
         entryFileNames: 'assets/[name].js',

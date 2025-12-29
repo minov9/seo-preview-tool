@@ -48,13 +48,13 @@ extension/
 ## 5.1 像素宽度计算规范（MVP）
 - 目标：与预览 UI 的字号/字重一致，避免“明明没溢出却提示截断”。
 - 方法：使用 Canvas 2D 的 `measureText` 计算像素宽度。
-- 字体基准（建议）：
-  - Title：20px，600，字体栈 `Sora, "Noto Sans SC", "PingFang SC", Arial, sans-serif`
+- 字体基准（Google 桌面 SERP）：
+  - Title：20px，400，字体栈 `"Roboto", "Arial", "Noto Sans SC", "PingFang SC", sans-serif`
   - Description：14px，400，字体栈同上
-- 截断规则：
-  - Title 单行显示，超出阈值时显示省略号并提示 `{width}px`
-  - Description 两行显示，超出阈值时显示省略号并提示 `{width}px`
-- 备注：若 UI 字体修改，需同步更新测量字体。
+- 截断规则（按“行数”估算）：
+  - Title 允许 2 行，基准行宽 600px
+  - Description 允许 2 行，基准行宽 600px
+- 备注：若 UI 字体修改，需同步更新测量字体与行宽。
 
 ## 5.2 分享元数据范围（MVP）
 - 分享卡片基于 `og:*` 与 `twitter:*` 等元数据生成。
@@ -72,7 +72,7 @@ extension/
 - “完整预览”打开扩展页，读取最近一次结果并展示
 - “刷新/重新扫描”触发重新抓取
 
-## 7. 导出 PNG（Pro）
+## 7. 导出 PNG
 - 在完整预览页对预览容器进行截图导出
 - 可用 html2canvas / html-to-image 类库生成 PNG
 - 导出内容包含：SERP（当前设备）+ 分享卡片 + 问题摘要
@@ -92,25 +92,9 @@ extension/
 - 插件发布：Chrome Web Store
 - 落地页：Vercel 免费部署（无需域名）
 
-## 10. 支付与权限（MVP）
-- 付费后发放 License Key，插件内验证后开通 Pro。
-- 授权验证 API：`/api/license/verify`（Vercel Functions）。
-- 验证通过后缓存到期时间，过期自动回退 Free。
-
-### 10.1 License API（Vercel Functions）
-- 位置：`site/api/license/verify.js`
-- 部署：Vercel 项目 Root Directory 指向 `site`
-- 机制：**无状态验证 (Stateless Verification)**
-  - 核心：使用 `ALIPAY_PRIVATE_KEY` 对 License 进行 RSA/SHA256 签名。
-  - 验证：验证接口仅需公钥即可校验 Key 的合法性与过期时间，无需查询数据库。
-- 环境变量：
-  - `ALIPAY_PRIVATE_KEY`: 用于签名（生成）和导出公钥（验证）。
-  - `VITE_ALIPAY_APP_ID`: 支付宝应用 ID。
-  - `ALIPAY_PUBLIC_KEY`: 支付宝平台公钥（用于回调验签）。
-
-### 10.2 插件配置
-- `VITE_LICENSE_API_BASE`：License API 部署域名（如 `https://example.com`）
-- `VITE_UPGRADE_URL`：购买页链接（用于“升级 Pro”跳转，可选，未配置则读取 manifest 的 `homepage_url`）
+## 10. 访问策略（当前）
+- 所有功能免费开放，不区分 Free/Pro。
+- 不提供支付入口、授权校验或 License Key。
 
 ## 11. 不在 MVP 的技术项
 - URL 批量抓取与解析

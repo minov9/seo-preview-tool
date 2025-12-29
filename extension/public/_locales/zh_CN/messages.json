@@ -1,64 +1,176 @@
 {
-  "appName": { "message": "SEO 预览" },
-  "popupScanning": { "message": "正在扫描…" },
-  "popupTryAgain": { "message": "重试" },
-  "popupPreview": { "message": "预览" },
-  "popupIssues": { "message": "问题" },
-  "popupViewAll": { "message": "查看全部" },
-  "popupNoIssues": { "message": "暂无问题" },
-  "popupRefresh": { "message": "刷新" },
-  "popupFullReport": { "message": "完整预览" },
-  "popupNoData": { "message": "暂无数据" },
-  "previewTitleMissing": { "message": "未检测到 Title" },
-  "previewDescriptionMissing": { "message": "未检测到 Description" },
-  "popupErrorInternal": { "message": "无法扫描此页面" },
-  "popupErrorNoTab": { "message": "未找到当前标签页" },
-  "popupErrorConnectionFailed": { "message": "连接失败，请刷新页面后重试" },
-  "previewLoading": { "message": "加载中…" },
-  "previewNoData": { "message": "暂无扫描数据，请先在弹窗中进行扫描" },
-  "previewTitle": { "message": "SEO 预览" },
-  "previewGeneratedAt": { "message": "生成于 $1" },
-  "previewExportPng": { "message": "导出 PNG" },
-  "previewRefresh": { "message": "刷新" },
-  "previewSearchPreview": { "message": "搜索预览" },
-  "previewSocialPreview": { "message": "分享卡片预览" },
-  "previewAnalysis": { "message": "问题诊断" },
-  "previewAllClearTitle": { "message": "全部正常" },
-  "previewAllClearDesc": { "message": "当前规则未发现问题" },
-  "previewMetaDetails": { "message": "元信息详情" },
-  "previewCopy": { "message": "复制" },
-  "previewCopySummary": { "message": "复制摘要" },
-  "previewShowSuggestion": { "message": "查看建议" },
-  "previewExpand": { "message": "展开" },
-  "previewDeviceDesktop": { "message": "桌面" },
-  "previewDeviceMobile": { "message": "移动" },
-  "previewIssuesCount": { "message": "发现 $1 个问题" },
-  "previewNoImage": { "message": "无预览图" },
-  "severityCritical": { "message": "严重" },
-  "severityWarning": { "message": "警告" },
-  "severityInfo": { "message": "提示" },
-  "severityOk": { "message": "OK" },
-  "proBadge": { "message": "Pro" },
-  "proStatusActive": { "message": "已激活" },
-  "proStatusInactive": { "message": "未激活" },
-  "proStatusExpired": { "message": "已过期" },
-  "proExpiresAt": { "message": "到期 $1" },
-  "proUpgrade": { "message": "升级 Pro" },
-  "proActivate": { "message": "激活" },
-  "proActivationTitle": { "message": "Pro 授权" },
-  "proLicenseLabel": { "message": "授权码" },
-  "proLicensePlaceholder": { "message": "输入 License Key" },
-  "proLicenseSubmit": { "message": "验证并激活" },
-  "proLicenseMissing": { "message": "请输入授权码" },
-  "proLicenseInvalid": { "message": "授权码无效" },
-  "proLicenseExpired": { "message": "授权已过期" },
-  "proLicenseNotConfigured": { "message": "授权服务未配置" },
-  "proLicenseNetworkError": { "message": "授权验证失败，请稍后再试" },
-  "proActivationSuccess": { "message": "授权已更新" },
-  "proLockedExport": { "message": "导出功能需升级 Pro" },
-  "proLockedCopy": { "message": "复制摘要需升级 Pro" },
-  "proLockedRules": { "message": "高级诊断需升级 Pro" },
-  "proHiddenIssues": { "message": "已隐藏 $1 条高级诊断" },
-  "proUnlockHint": { "message": "升级 Pro 解锁导出与高级诊断" },
-  "proUpgradeUnavailable": { "message": "购买链接未配置" }
+  "appName": {
+    "message": "SEO 预览"
+  },
+  "popupScanning": {
+    "message": "正在扫描…"
+  },
+  "popupTryAgain": {
+    "message": "重试"
+  },
+  "popupPreview": {
+    "message": "预览"
+  },
+  "popupIssues": {
+    "message": "问题"
+  },
+  "popupViewAll": {
+    "message": "查看全部"
+  },
+  "popupNoIssues": {
+    "message": "暂无问题"
+  },
+  "popupRefresh": {
+    "message": "刷新"
+  },
+  "popupFullReport": {
+    "message": "SEO 工作台"
+  },
+  "popupNoData": {
+    "message": "暂无数据"
+  },
+  "previewTitleMissing": {
+    "message": "未检测到 Title"
+  },
+  "previewDescriptionMissing": {
+    "message": "未检测到 Description"
+  },
+  "popupErrorInternal": {
+    "message": "无法扫描此页面，请切换到普通网页"
+  },
+  "popupErrorNoTab": {
+    "message": "未找到当前标签页"
+  },
+  "popupErrorConnectionFailed": {
+    "message": "连接失败，请刷新页面后重试"
+  },
+  "previewLoading": {
+    "message": "加载中…"
+  },
+  "previewNoData": {
+    "message": "暂无扫描数据，请先在弹窗中进行扫描"
+  },
+  "previewTitle": {
+    "message": "SEO 预览"
+  },
+  "previewGeneratedAt": {
+    "message": "生成于 $1"
+  },
+  "previewExportPng": {
+    "message": "导出 PNG"
+  },
+  "previewRefresh": {
+    "message": "刷新"
+  },
+  "previewSearchPreview": {
+    "message": "搜索预览"
+  },
+  "previewSocialPreview": {
+    "message": "分享卡片预览"
+  },
+  "previewAnalysis": {
+    "message": "问题诊断"
+  },
+  "previewAllClearTitle": {
+    "message": "全部正常"
+  },
+  "previewAllClearDesc": {
+    "message": "当前规则未发现问题"
+  },
+  "previewMetaDetails": {
+    "message": "元信息详情"
+  },
+  "previewCopy": {
+    "message": "复制"
+  },
+  "previewCopySummary": {
+    "message": "复制摘要"
+  },
+  "previewShowSuggestion": {
+    "message": "查看建议"
+  },
+  "previewExpand": {
+    "message": "展开"
+  },
+  "previewDeviceDesktop": {
+    "message": "桌面"
+  },
+  "previewDeviceMobile": {
+    "message": "移动"
+  },
+  "previewIssuesCount": {
+    "message": "发现 $1 个问题"
+  },
+  "previewNoImage": {
+    "message": "无预览图"
+  },
+  "severityCritical": {
+    "message": "严重"
+  },
+  "severityWarning": {
+    "message": "警告"
+  },
+  "severityInfo": {
+    "message": "提示"
+  },
+  "severityOk": {
+    "message": "OK"
+  },
+  "editorTitle": {
+    "message": "SEO 工作台"
+  },
+  "editorSubtitle": {
+    "message": "模拟草稿 · 实时预览"
+  },
+  "editorNote": {
+    "message": "仅供模拟与复制，不会修改页面内容"
+  },
+  "editorTitleLabel": {
+    "message": "Title"
+  },
+  "editorTitlePlaceholder": {
+    "message": "输入页面标题"
+  },
+  "editorTitleHint": {
+    "message": "参考区间：30-60 字"
+  },
+  "editorDescriptionLabel": {
+    "message": "Description"
+  },
+  "editorDescriptionPlaceholder": {
+    "message": "输入页面描述"
+  },
+  "editorDescriptionHint": {
+    "message": "参考区间：90-160 字"
+  },
+  "editorOgImageLabel": {
+    "message": "OG Image URL"
+  },
+  "editorOgImagePlaceholder": {
+    "message": "输入分享图片链接（1200x630）"
+  },
+  "editorOgImageHint": {
+    "message": "参考尺寸：1200x630"
+  },
+  "editorCharCount": {
+    "message": "当前 $1 字"
+  },
+  "editorCodeLabel": {
+    "message": "可复制 HTML"
+  },
+  "editorCopyHtml": {
+    "message": "复制 HTML"
+  },
+  "editorCodePlaceholder": {
+    "message": "<title>...</title>\n<meta name=\"description\" content=\"...\">\n<meta property=\"og:image\" content=\"...\">"
+  },
+  "editorCopySuccess": {
+    "message": "HTML 已复制"
+  },
+  "editorCopyFailed": {
+    "message": "复制失败，请手动复制"
+  },
+  "editorCopyEmpty": {
+    "message": "请输入内容后再复制"
+  }
 }
